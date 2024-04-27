@@ -4,9 +4,15 @@ from copy import deepcopy
 import logging
 import os
 import pickle
+import logging
+
+# Configure logging to output to the standard output and set the level to DEBUG
+#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from storygen.plan.outline import *
 from storygen.story.story import *
+
+from colorama import Fore
 
 
 def generate_story(plan, story_config, story_prompts, llm_client, intermediate_save_prefix=None, delete_old_intermediates=True):
@@ -73,6 +79,10 @@ def select_node_to_render(plan, beam, story_config):
 
 
 def render_node(story, node_to_render, story_config, story_prompts, llm_client, **kwargs):
+    
+    logging.debug(f"Starting to render node: {node_to_render.text}")
+    # continue with the function implementation
+
     def update_best_stories(i, best_stories, beam, story_config, aux_attr='score'):
         if i < story_config['min_passages_per_node']:
             return beam
@@ -194,7 +204,14 @@ def render_passage(story, node_to_render, story_config, story_prompts, llm_clien
         ending_info = ' Do NOT write any extra comments, suggestions, or questions at the end.'
     else:
         ending_info = ' This passage should end the story.'
-    
+        
+    #print("calling posprocessor function---------------------------")
+    #print(story)
+    #print(node_to_render)
+    #print(story_config)
+    #print(story_prompts)
+    #print(llm_client)
+
     passages = llm_client.call_with_retry(
         story_prompts['passage'].format(
             premise=story.plan.premise.premise,
@@ -210,25 +227,28 @@ def render_passage(story, node_to_render, story_config, story_prompts, llm_clien
             current_entities=', '.join(node_to_render.entities),
             autoregressive_context=autoregressive_context,
             ending_info=ending_info
-        ),
-        SamplingConfig.from_config(story_config['passage']),
-        postprocessor=partial(make_and_score_passages, 
-                            story=story, 
-                            node=node_to_render, 
-                            story_config=story_config, 
-                            story_prompts=story_prompts, 
-                            llm_client=llm_client,
-                            is_ending=kwargs.get('is_ending', False)
-        ),
-        filter=Filter(lambda s: len(s.text.strip()) > 0 and not any([bad_string.lower() in s.text.lower() for bad_string in ['passage']])) + \
-                Filter.wrap_preprocessor(lambda s: s.text, levenshtein_ratio_filter([story.passages()[-1].text] if len(story.passages()) > 0 else [])),
-        empty_ok=True
-    )
+            ),
+            SamplingConfig.from_config(story_config['passage']),
+            
+            postprocessor=partial(make_and_score_passages, 
+                                story=story, 
+                                node=node_to_render, 
+                                story_config=story_config, 
+                                story_prompts=story_prompts, 
+                                llm_client=llm_client,
+                                is_ending=kwargs.get('is_ending', False)
+            ),
+            filter=Filter(lambda s: len(s.text.strip()) > 0 and not any([bad_string.lower() in s.text.lower() for bad_string in ['passage']])) + \
+                    Filter.wrap_preprocessor(lambda s: s.text, levenshtein_ratio_filter([story.passages()[-1].text] if len(story.passages()) > 0 else [])),
+            empty_ok=True 
+        )
+    #print("calling posprocessor function done---------------------------")
     return passages
 
 
 def make_and_score_passages(raw_passages, story, node, story_config, story_prompts, llm_client, full_completion_object=None, **kwargs):
-    assert len(full_completion_object['choices']) == len(raw_passages)
+    #print("make and score called---------------------------")
+    assert len(full_completion_object.choices) == len(raw_passages)
     passages = []
     for passage_idx, passage_text in enumerate(raw_passages):
         passage_text = passage_text.rstrip()
@@ -238,12 +258,20 @@ def make_and_score_passages(raw_passages, story, node, story_config, story_promp
         aux_info = {}
         score = 0
         for scorer in story_config['score']['scorers']:
+            #print(f"{Fore.RED}SCORER: {scorer}{Fore.WHITE}")
             if scorer == 'coherence':
+                
                 coherence_score = 0
+                #print(f"{Fore.RED}coherence_score{Fore.WHITE}")
+                #print(len(story.passages()))
                 if len(story.passages()) > 0:
                     try:
+                        #print(f"{Fore.RED}Trying Scoring{Fore.WHITE}")
                         coherence_prefix = story.passages()[-story_config['score']['coherence']['max_prefix_passages']:]
+                        #print(f"{Fore.RED}{coherence_prefix}{Fore.WHITE}")
                         coherence_prefix = ''.join([p.text for p in coherence_prefix])
+                        
+                        #print("calling completion score function---------------------------")
                         _, coherence_score_completion = llm_client.call_with_retry(
                             story_prompts['score']['coherence'].format(
                                 prefix=coherence_prefix.strip(),
@@ -253,7 +281,11 @@ def make_and_score_passages(raw_passages, story, node, story_config, story_promp
                             filter=lambda s: len(s.strip()) > 0,
                             return_full_completion=True
                         )
+                        
+                        #print(f"{Fore.RED}COHERENCE COMPLETION{Fore.WHITE}")
+                        #print(coherence_score_completion)
                         yes_no_logprobs = extract_choice_logprobs(coherence_score_completion, default_logprobs=[-1e8, -1e7])
+                        #print(yes_no_logprobs)
                         coherence_score = yes_no_logprobs[0][0] # logprob of yes
                     except:
                         logging.warning(f"Failed to score coherence for passage: {passage_text}")
@@ -303,7 +335,9 @@ def make_and_score_passages(raw_passages, story, node, story_config, story_promp
                 aux_info['commentary_score'] = commentary_score
             elif scorer == 'length':
                 length_score = 0
-                if full_completion_object['choices'][passage_idx]['finish_reason'] != 'length':
+                #print("Checking data type:", type(full_completion_object.choices[passage_idx]))
+                #print("Contents:", full_completion_object.choices[passage_idx])
+                if full_completion_object.choices[passage_idx].finish_reason != 'length':
                     if 'is_ending' in kwargs and kwargs['is_ending']:
                         # we want to stop early when trying to end the story
                         length_score = 100

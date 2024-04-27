@@ -3,6 +3,9 @@
 import os
 import sys
 
+import sys
+sys.path.insert(0, '/home/morenolabs/coding/doc-storygen-v2')
+
 from storygen.common.server import ServerConfig
 
 # run this script from the same directory from where you ran start_servers.py to close any corresponding vllm servers

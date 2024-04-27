@@ -3,6 +3,9 @@
 import argparse
 import os
 
+import sys
+sys.path.insert(0, '/home/morenolabs/coding/doc-storygen-v2')
+
 from pathlib import Path
 
 from storygen.common.llm.llm import LLMClient

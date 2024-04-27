@@ -4,6 +4,10 @@ import argparse
 import logging
 import os
 
+import sys
+sys.path.insert(0, '/home/morenolabs/coding/doc-storygen-v2')
+from storygen.common.config import *
+
 from pathlib import Path
 
 from storygen.common.config import *

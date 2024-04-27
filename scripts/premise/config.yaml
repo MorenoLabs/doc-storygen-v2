@@ -7,12 +7,12 @@ defaults:
   output_path: output/premise.json
   logging_level: info # debug, info, warning, error, critical
   MODEL:
-    engine: TODO # TODO path/to/vllm-supported/hf/model, vllm-supported huggingface model string, or openai model string
+    engine: gpt-3.5-turbo # TODO path/to/vllm-supported/hf/model, vllm-supported huggingface model string, or openai model string
     tensor_parallel_size: 1 # TODO number of gpus to use
-    server_type: vllm # "vllm" or "openai"
+    server_type: openai # "vllm" or "openai"
     host: http://localhost # model server if using vllm
     port: 9741
-    prompt_format: llama2-chat # "none" (pretrained base model), "openai-chat", or "llama2-chat"; add other options in common/llm/prompt.py as needed
+    prompt_format: openai-chat # "none" (pretrained base model), "openai-chat", or "llama2-chat"; add other options in common/llm/prompt.py as needed
     temperature: 1.2
     top_p: 0.99
     frequency_penalty: 0

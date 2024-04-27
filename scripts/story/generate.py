@@ -3,6 +3,8 @@
 import argparse
 import os
 import pickle
+import sys
+sys.path.insert(0, '/home/morenolabs/coding/doc-storygen-v2')
 
 from pathlib import Path
 

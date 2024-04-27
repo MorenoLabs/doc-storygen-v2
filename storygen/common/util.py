@@ -108,7 +108,7 @@ def wrap_filter_for_tuple(filter, index=0):
     return Filter(lambda s: filter(s[index]))
 
 
-def extract_choice_logprobs(full_completion, choices=['yes', 'no'], default_logprobs=[-1e8, -1e8], case_sensitive=False):
+""" def extract_choice_logprobs(full_completion, choices=['yes', 'no'], default_logprobs=[-1e8, -1e8], case_sensitive=False):
     batch_logprobs = []
     for choice in full_completion['choices']:
         all_logprobs = choice['logprobs']['top_logprobs']
@@ -123,4 +123,88 @@ def extract_choice_logprobs(full_completion, choices=['yes', 'no'], default_logp
             if found:
                 break
         batch_logprobs.append(log_softmax(logprobs))
+    return batch_logprobs """
+
+
+""" def extract_choice_logprobs(completion_response, choices=['yes', 'no'], default_logprobs=[-1e8, -1e8]):
+Extracts the log probabilities for specified choices from the API completion.
+    batch_logprobs = []
+    all_logprobs = completion_response.choices[0].logprobs
+    logprobs = [l for l in default_logprobs]
+    for token_logprobs in all_logprobs:
+        for key, value in token_logprobs.items():
+            if key in choices:  # Exact match to 'yes' or 'no'
+                idx = choices.index(key)
+                logprobs[idx] = value
+    
+    batch_logprobs.append(log_softmax(logprobs))
+    return batch_logprobs """
+
+
+""" def extract_choice_logprobs(completion_response, choices=['yes', 'no'], default_logprobs=[-1e8, -1e8], case_sensitive=False):
+    Extracts the log probabilities for specified choices from the API completion.
+    print("entering extract_choice_logprobs")
+    batch_logprobs = []
+    content_logprobs = completion_response.choices[0].logprobs.content[0].top_logprobs  # Access the correct path to logprobs in the response
+    print("content_logprobs: ", content_logprobs)
+
+    # Iterate over each token's logprobs
+    logprobs = default_logprobs.copy()
+
+    # Iterate over each token's top_logprobs to extract specific choices 'yes' and 'no'
+    for top_logprob in content_logprobs:
+        token = top_logprob.token.lower()  # Normalize the token text to lowercase for comparison
+        if token in choices:
+            print("token: ", token)
+            idx = choices.index(token)
+            logprobs[idx] = top_logprob.logprob  # Update the log probability for the found choice
+
+    batch_logprobs.append(log_softmax(logprobs))  # Apply log softmax to normalize the probabilities
+    return batch_logprobs
+ """
+
+
+
+def extract_choice_logprobs(full_completion, choices=['yes', 'no'], default_logprobs=[-1e8, -1e8], case_sensitive=False):
+    """ Extracts the log probabilities for specified choices from the API completion, considering case sensitivity. """
+    #print("Entering extract_choice_logprobs")
+    batch_logprobs = []
+    
+    for index, choice_data in enumerate(full_completion.choices):
+        #print(f"Processing choice {index} with data: {choice_data}")
+        all_logprobs = choice_data.logprobs.content  # Directly access the content
+        #print(f"all_logprobs length: {len(all_logprobs)}")
+        
+        found = False
+        logprobs = default_logprobs.copy()
+        #print(f"Initial logprobs: {logprobs}")
+
+        # Iterate over each token's logprobs to extract specific choices 'yes' and 'no'
+        for token_idx, token_logprob in enumerate(all_logprobs):
+            top_logprobs = token_logprob.top_logprobs  # Access the top_logprobs directly
+            #print(f"Token {token_idx} top_logprobs: {top_logprobs}")
+            
+            for top_logprob in top_logprobs:
+                token = top_logprob.token
+                logprob = top_logprob.logprob
+                #print(f"Inspecting token: {token} with logprob: {logprob}")
+                
+                if not case_sensitive:
+                    token = token.lower()
+                
+                for idx, choice in enumerate(choices):
+                    compare_choice = choice if case_sensitive else choice.lower()
+                    if compare_choice == token:
+                        logprobs[idx] = logprob
+                        found = True
+                        #print(f"Match found for '{token}'. Updating logprob at index {idx}: {logprobs}")
+                        break
+                if found:
+                    break
+            if found:
+                break
+
+        batch_logprobs.append(log_softmax(logprobs))
+        #print(f"Normalized logprobs for batch index {index}: {batch_logprobs[-1]}")
+
     return batch_logprobs

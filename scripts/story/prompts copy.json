@@ -1,0 +1,24 @@
+{
+    "story": {
+        "passage": {
+            "instruction": "I will give you the high-level topic for a technical blog post, along with a summary of what key points need to be covered. This blog post is intended for professionals interested in technology and innovation, praised for its detailed analysis and expert insights.\n\nMain Topic: {topic}\n\nKey Concepts: {key_concepts}\n\nPrevious Blog Summary: {previous_blog_summary}\n\nDetails to Include in the Upcoming Blog: {details_to_include}\n\nIn the upcoming blog, {ancestors}{previous_events}{current_event}{future_events}{previous_scene_info} The focus is on {current_technology}. The key entities discussed will be {key_entities}.\n\nBased on all this information, please suggest a draft for the upcoming blog section, including specific technical details.{ending_info}",
+            "response_prefix": "{autoregressive_context}"
+        },
+        "summary": {
+            "instruction": "{raw_article_content}\n\n\n\nWrite a concise summary of the above blog content, focusing on the technical aspects and practical applications.",
+            "response_prefix": "Here's a quick summary of the key points:\n\n"
+        },
+        "score": {
+            "coherence": {
+                "instruction": "Technical Context: {prefix}\n\n\n\nTechnical Content: {continuation}\n\n\n\nDoes the technical content make sense given the initial context? Yes or No."
+            },
+            "relevance": {
+                "instruction": "Blog Content: {continuation}\n\n\n\nTopic: {node_event}\n\n\n\nIs the topic accurately addressed in the blog content? Yes or No."
+            },
+            "commentary": {
+                "instruction": "Text:\n\n------------\n\n{last_paragraph}\n\n------------\n\n\n\nIs this text part of the actual technical content or is it a general commentary, description, or question about the topic?\n\n(A) Actual technical content\n\n(B) General commentary, description, or question",
+                "response_prefix": "("
+            }
+        }
+    }
+}
