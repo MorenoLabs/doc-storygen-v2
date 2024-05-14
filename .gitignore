@@ -146,9 +146,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+bfg.jar
+bfg-config.txt
 # pytype static type analyzer
 .pytype/
 
+*.pkl
 # Cython debug symbols
 cython_debug/
 
