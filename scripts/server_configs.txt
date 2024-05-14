@@ -1,2 +1,3 @@
 {"engine": "openai-community/openai-gpt", "host": "http://localhost", "port": 9741, "server_type": "vllm", "tensor_parallel_size": 1}
 {"engine": "openai-community/openai-gpt", "host": "http://localhost", "port": 9741, "server_type": "openai", "tensor_parallel_size": 1}
+{"engine": "gpt-3.5-turbo", "host": "http://localhost", "port": 9741, "server_type": "openai", "tensor_parallel_size": 1}

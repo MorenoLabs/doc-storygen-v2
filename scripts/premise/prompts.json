@@ -1,10 +1,10 @@
 {
     "title": {
-        "instruction": "Write one single title for one short science fiction story.",
+        "instruction": "Write a title for a a deep emotional short story surrounding a man who finds a ring which allows him to turn back time for 10 seconds, but he can only use it once.",
         "response_prefix": "Sure, here is a possible title:\n\nTitle:"
     },
     "premise": {
-        "instruction": "Write a premise for a short hort science fiction story.",
-        "response_prefix": "Title: {title}\n\nPremise:"
+        "instruction": "Write a premise for a deep emotional short story surrounding a man who finds a ring which allows him to turn back time for 10 seconds, but he can only use it once and will face hard decisions on how to use it. Its not obvious.",
+        "response_prefix": "Premise:"
     }
 }
